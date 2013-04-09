@@ -1,0 +1,10 @@
+import game
+from snake import *
+
+class SnakeGame(game.Game):
+    def __init__(self):
+        game.Game.__init__(self, "Snake", 640, 480, 10)
+        #create an instance of snake
+        self.snake = Snake(640, 480, 20)
+
+    

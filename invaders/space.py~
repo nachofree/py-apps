@@ -1,0 +1,116 @@
+import pygame
+from pygame.locals import *
+
+MAINSHIP = 0
+ENEMYSHIP = 1
+
+SHIPSPEED = 3
+BULLET_SPEED = 4
+MAX_BULLETS = 1
+
+def load_image(filename):
+    datadir = "./data/"
+    image = pygame.image.load(datadir + filename)
+    image = image.convert()
+    return image, image.get_rect()
+
+class Space():
+    def __init__(self, screen):
+        self.image, self.rect = load_image("stars.bmp")
+        self.screen = screen
+
+    def update(self):
+        self.screen.blit(self.image, self.rect)
+
+
+class Bullet(pygame.sprite.Sprite):
+    def __init__(self, x, y, speed, screen):
+        self.screen = screen
+        pygame.sprite.Sprite.__init__(self)
+        self.image, self.rect = load_image("fire.bmp")
+        self.rect.center = x,y
+        self.speed = speed
+        self.onscreen = True
+
+    def update(self):
+        #move the bullet
+        newrect = self.rect.move((0, -self.speed))
+        area = self.screen.get_rect()
+
+        if area.contains(newrect):
+            self.rect = newrect
+        else:
+            self.onscreen = False
+
+        #self.image = pygame.transform.flip(self.image, 1, 0)
+        self.screen.blit(self.image, self.rect)
+        
+    def get_onscreen(self):
+        return self.onscreen
+
+
+class Ship(pygame.sprite.Sprite):
+    def __init__(self, ship_type, screen, x, y):
+        self.screen = screen
+        pygame.sprite.Sprite.__init__(self)
+        #image and rect are sprite datamember requirements
+        if ship_type == MAINSHIP: 
+            self.image, self.rect = load_image("ship.bmp")
+        elif ship_type == ENEMYSHIP:
+            self.image, self.rect = load_image("eship.bmp")
+
+        #starting coords        
+        self.rect.bottomleft = x,y 
+
+        #speed
+        self.dx = 0.0
+        self.dy = 0.0
+
+        #moving?
+        self.moving = False
+
+        #bullets on screen
+        self.bullets = []
+
+    def update(self):
+        #move the ship
+        newrect = self.rect.move((self.dx, self.dy))
+        area = self.screen.get_rect()
+
+        if area.contains(newrect):
+            if not self.rect.right > area.right or not self.rect.left < area.left:
+                self.rect = newrect
+        self.image = pygame.transform.flip(self.image, 1, 0)
+        self.screen.blit(self.image, self.rect)
+
+        #any bullets to update
+        if len(self.bullets)>0:
+            for bullet in self.bullets:
+                if bullet.get_onscreen():
+                    bullet.update()
+                else:
+                    self.bullets.remove(bullet)
+
+
+    def right(self):
+        if self.moving:
+            self.dx = 0.0
+            self.moving = False
+        else:
+            self.dx = SHIPSPEED
+            self.moving = True
+        
+
+    def left(self):
+        if self.moving:
+            self.dx = 0.0
+            self.moving = False
+        else:
+            self.dx = -SHIPSPEED
+            self.moving = True
+
+    def fire(self):
+        bullet = Bullet(self.rect.centerx, self.rect.centery, BULLET_SPEED, self.screen)
+        if len(self.bullets) < MAX_BULLETS:
+            self.bullets.append(bullet)
+
