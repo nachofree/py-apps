@@ -1,0 +1,41 @@
+import sys
+from PyQt4 import QtCore, QtGui
+
+from movie_gui import *
+from tmdb_query import *
+
+
+
+class MyForm(QtGui.QMainWindow):
+    def __init__(self, parent=None):
+        QtGui.QWidget.__init__(self, parent)
+        self.ui = Ui_MainWindow()
+        self.ui.setupUi(self)
+        QtCore.QObject.connect(self.ui.btnSubmit, QtCore.SIGNAL("clicked()"), self.doSearch)
+	
+
+    def doSearch(self):
+        print 'doing search'
+        movie = Tmdb()
+        results = movie.searchByTitle(str(self.ui.lineEdit.text()))
+
+        #[0] just gets the first result
+        # you could arbitrarily loop through each result with:
+        #for r in results:
+        #    print r['poster_path']
+
+        results = results['results'][0]
+        self.ui.lblTitle.setText(results['title'])
+        img_url = results['poster_path']
+        self.ui.webView.load(QtCore.QUrl("http://cf2.imgobject.com/t/p/w500/"+img_url))
+        
+            
+        
+			
+
+if __name__ == "__main__":
+    app = QtGui.QApplication(sys.argv)
+    myapp = MyForm()
+    myapp.show()
+    sys.exit(app.exec_())
+
